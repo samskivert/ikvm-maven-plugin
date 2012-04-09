@@ -8,12 +8,11 @@
       </implementation>
       <configuration>
         <phases>
-          <!-- use the basic jar lifecycle bindings -->          
           <process-resources>
             org.apache.maven.plugins:maven-resources-plugin:resources
           </process-resources>
           <package>
-            org.apache.maven.plugins:maven-jar-plugin:jar
+            com.samskivert:ikvm-maven-plugin:ikvm
           </package>
           <install>
             org.apache.maven.plugins:maven-install-plugin:install
@@ -31,11 +30,8 @@
         org.apache.maven.artifact.handler.DefaultArtifactHandler
       </implementation>
       <configuration>
-        <!-- the extension used by Maven in the repository -->
         <extension>dll</extension>
-        <!-- the type used when specifying dependencies -->
         <type>dll</type>
-        <!-- the packaging used when declaring an implementation of  the packaging -->
         <packaging>dll</packaging>
       </configuration>
     </component>
