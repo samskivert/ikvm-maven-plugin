@@ -33,10 +33,9 @@ public class IkvmMavenMojo extends AbstractMojo
 {
     /**
      * Location of the IKVM installation.
-     * @parameter expression="${ikvm.home}"
-     * @required
+     * @parameter expression="${ikvm.path}"
      */
-    public File ikvmHome;
+    public File ikvmPath;
 
     /**
      * The location of the Mono standard library DLLs.
@@ -64,15 +63,24 @@ public class IkvmMavenMojo extends AbstractMojo
     public ArtifactRepository localRepository;
 
     public void execute () throws MojoExecutionException {
-        // sanity checks
-        if (!monoPath.isDirectory()) {
-            getLog().warn(monoPath + " does not exist. Skipping IKVM build.");
+        if (ikvmPath == null) {
+            getLog().warn("ikvm.path is not set. Skipping IKVM build.");
             return;
         }
 
-        File ikvmc = new File(new File(ikvmHome, "bin"), "ikvmc.exe");
+        // sanity checks
+        if (!monoPath.isDirectory()) {
+            throw new MojoExecutionException(
+                "mono.path refers to non- or non-existent directory: " + monoPath);
+        }
+        if (!ikvmPath.isDirectory()) {
+            throw new MojoExecutionException(
+                "ikvm.path refers to non- or non-existent directory: " + monoPath);
+        }
+
+        File ikvmc = new File(new File(ikvmPath, "bin"), "ikvmc.exe");
         if (!ikvmc.exists()) {
-            throw new MojoExecutionException("Unable to find bin/ikmvc.exe in " + ikvmHome);
+            throw new MojoExecutionException("Unable to find ikmvc at: " + ikvmc);
         }
 
         // resolve the (non-test) jar dependencies, all of which we'll include in our DLL
@@ -95,7 +103,7 @@ public class IkvmMavenMojo extends AbstractMojo
 
         // create a command that executes mono on ikvmc.exe
         Commandline cli = new Commandline("mono");
-        File ikvmcExe = new File(new File(ikvmHome, "bin"), "ikvmc.exe");
+        File ikvmcExe = new File(new File(ikvmPath, "bin"), "ikvmc.exe");
         cli.createArgument().setValue(ikvmcExe.getAbsolutePath());
 
         // add our standard args

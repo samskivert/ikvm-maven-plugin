@@ -18,7 +18,11 @@ One must configure their IKVM installation location in Maven's global settings
       <profile>
         <id>ikvm</id>
         <properties>
-          <ikvm.home>${user.home}/projects/ikvm-monotouch</ikvm.home>
+          <ikvm.path>${user.home}/projects/ikvm-monotouch</ikvm.path>
+          <!-- mono.path specifies where to find the Mono standard libraries. It defaults to:
+               /Developer/MonoTouch/usr/lib/mono/2.1
+               but you can customize it to use any other Mono installation. -->
+          <!-- <mono.path/to/mono/usr/lib/x.x</mono.path> -->
         </properties>
       </profile>
     </profiles>
@@ -59,10 +63,6 @@ Once that's done, the following POM fragment demonstrates the use of this plugin
             <!-- this lets Maven know that we define 'packaging: dll' -->
             <extensions>true</extensions>
             <configuration>
-              <!-- monoPath specifies where to find the Mono standard libraries. It defaults to:
-                   /Developer/MonoTouch/usr/lib/mono/2.1
-                   but you can customize it to use any other Mono installation. -->
-              <!-- <monoPath>/path/to/mono/usr/lib/x.x</monoPath> -->
               <ikvmArgs>
                 <ikvmArg>-debug</ikvmArg>
               </ikvmArgs>
