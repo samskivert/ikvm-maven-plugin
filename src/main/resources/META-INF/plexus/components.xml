@@ -1,0 +1,43 @@
+<component-set>
+  <components>
+    <component>
+      <role>org.apache.maven.lifecycle.mapping.LifecycleMapping</role>
+      <role-hint>dll</role-hint>
+      <implementation>
+        org.apache.maven.lifecycle.mapping.DefaultLifecycleMapping
+      </implementation>
+      <configuration>
+        <phases>
+          <!-- use the basic jar lifecycle bindings -->          
+          <process-resources>
+            org.apache.maven.plugins:maven-resources-plugin:resources
+          </process-resources>
+          <package>
+            org.apache.maven.plugins:maven-jar-plugin:jar
+          </package>
+          <install>
+            org.apache.maven.plugins:maven-install-plugin:install
+          </install>
+          <deploy>
+            org.apache.maven.plugins:maven-deploy-plugin:deploy
+          </deploy>
+        </phases>
+      </configuration>
+    </component>
+    <component>
+      <role>org.apache.maven.artifact.handler.ArtifactHandler</role>
+      <role-hint>dll</role-hint>
+      <implementation>
+        org.apache.maven.artifact.handler.DefaultArtifactHandler
+      </implementation>
+      <configuration>
+        <!-- the extension used by Maven in the repository -->
+        <extension>dll</extension>
+        <!-- the type used when specifying dependencies -->
+        <type>dll</type>
+        <!-- the packaging used when declaring an implementation of  the packaging -->
+        <packaging>dll</packaging>
+      </configuration>
+    </component>
+  </components>
+</component-set>
