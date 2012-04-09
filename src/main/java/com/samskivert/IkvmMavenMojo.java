@@ -40,9 +40,9 @@ public class IkvmMavenMojo extends AbstractMojo
 
     /**
      * The location of the Mono standard library DLLs.
-     * @parameter expression="${stdlib.path}" default-value="/Developer/MonoTouch/usr/lib/mono/2.1"
+     * @parameter expression="${mono.path}" default-value="/Developer/MonoTouch/usr/lib/mono/2.1"
      */
-    public File stdlibPath;
+    public File monoPath;
 
     /**
      * Additional arguments to pass to IKVM.
@@ -52,7 +52,7 @@ public class IkvmMavenMojo extends AbstractMojo
 
     /**
      * Additional DLLs (beyond mscorlib, System and System.Core) to reference. These can be
-     * absoulte paths, or relative to {@ocde stdlibPath}.
+     * absoulte paths, or relative to {@ocde monoPath}.
      * @parameter
      */
     public List<String> dlls;
@@ -65,8 +65,8 @@ public class IkvmMavenMojo extends AbstractMojo
 
     public void execute () throws MojoExecutionException {
         // sanity checks
-        if (!stdlibPath.isDirectory()) {
-            getLog().warn(stdlibPath + " does not exist. Skipping IKVM build.");
+        if (!monoPath.isDirectory()) {
+            getLog().warn(monoPath + " does not exist. Skipping IKVM build.");
             return;
         }
 
@@ -123,7 +123,7 @@ public class IkvmMavenMojo extends AbstractMojo
         cli.createArgument().setValue("-out:" + outfile.getAbsolutePath());
 
         // set the MONO_PATH envvar
-        cli.addEnvironment("MONO_PATH", stdlibPath.getAbsolutePath());
+        cli.addEnvironment("MONO_PATH", monoPath.getAbsolutePath());
 
         // add our standard DLLs
         List<String> stdDlls = new ArrayList<String>();
@@ -131,7 +131,7 @@ public class IkvmMavenMojo extends AbstractMojo
         stdDlls.add("System.dll");
         stdDlls.add("System.Core.dll");
         for (String dll : stdDlls) {
-            cli.createArgument().setValue("-r:" + new File(stdlibPath, dll).getAbsolutePath());
+            cli.createArgument().setValue("-r:" + new File(monoPath, dll).getAbsolutePath());
         }
 
         // add our DLLs
@@ -140,7 +140,7 @@ public class IkvmMavenMojo extends AbstractMojo
             if (new File(dll).isAbsolute()) {
                 cli.createArgument().setValue("-r:" + dll);
             } else {
-                cli.createArgument().setValue("-r:" + new File(stdlibPath, dll).getAbsolutePath());
+                cli.createArgument().setValue("-r:" + new File(monoPath, dll).getAbsolutePath());
             }
         }
 
