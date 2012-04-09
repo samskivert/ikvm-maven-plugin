@@ -101,6 +101,17 @@ public class IkvmMavenMojo extends AbstractMojo
             throw new MojoExecutionException("Failed to resolve dependencies.", e);
         }
 
+        // create our target directory if needed (normally the jar plugin does this, but we don't
+        // run the jar plugin)
+        File projectDir = new File(_project.getBuild().getDirectory());
+        if (!projectDir.isDirectory()) {
+            projectDir.mkdir();
+        }
+
+        // configure our artifact file
+        File artifact = new File(projectDir, _project.getBuild().getFinalName() + ".dll");
+        _project.getArtifact().setFile(artifact);
+
         // create a command that executes mono on ikvmc.exe
         Commandline cli = new Commandline("mono");
         File ikvmcExe = new File(new File(ikvmPath, "bin"), "ikvmc.exe");
@@ -126,9 +137,7 @@ public class IkvmMavenMojo extends AbstractMojo
         }
 
         // add our output file
-        String outname = _project.getBuild().getFinalName() + ".dll";
-        File outfile = new File(new File(_project.getBuild().getDirectory()), outname);
-        cli.createArgument().setValue("-out:" + outfile.getAbsolutePath());
+        cli.createArgument().setValue("-out:" + artifact.getAbsolutePath());
 
         // set the MONO_PATH envvar
         cli.addEnvironment("MONO_PATH", monoPath.getAbsolutePath());
