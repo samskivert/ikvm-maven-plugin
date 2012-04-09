@@ -44,7 +44,7 @@ Here's a sample POM that demonstrates the use of this plugin:
             <!-- this lets Maven know that we define 'packaging: dll' -->
             <extensions>true</extensions>
             <configuration>
-              <ikvmHome>${user.dir}/projects/ikvm-monotouch</ikvmHome>
+              <ikvmHome>${user.home}/projects/ikvm-monotouch</ikvmHome>
               <ikvmArgs>
                 <ikvmArg>-debug</ikvmArg>
               </ikvmArgs>
