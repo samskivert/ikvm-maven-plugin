@@ -13,63 +13,61 @@ It defines a `dll` packaging type and generates a `dll` artifact.
 
 Here's a sample POM that demonstrates the use of this plugin:
 
-{{{
-<?xml version="1.0" encoding="UTF-8"?>
-<project ...>
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>foo</groupId>
-  <artifactId>bar-ios</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <packaging>dll</packaging>
-
-  <dependencies>
-    <dependency>
+    <?xml version="1.0" encoding="UTF-8"?>
+    <project ...>
+      <modelVersion>4.0.0</modelVersion>
       <groupId>foo</groupId>
-      <artifactId>bar-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+      <artifactId>bar-ios</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <packaging>dll</packaging>
 
-    <dependency>
-      <groupId>baz</groupId>
-      <artifactId>bif</artifactId>
-      <version>1.2</version>
-    </dependency>
-  </dependencies>
+      <dependencies>
+        <dependency>
+          <groupId>foo</groupId>
+          <artifactId>bar-core</artifactId>
+          <version>${project.version}</version>
+        </dependency>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>com.samskivert</groupId>
-        <artifactId>ikvm-maven-plugin</artifactId>
-        <version>1.0</version>
-        <!-- this lets Maven know that we define 'packaging: dll' -->
-        <extensions>true</extensions>
-        <configuration>
-          <ikvmHome>${user.dir}/projects/ikvm-monotouch</ikvmHome>
-          <ikvmArgs>
-            <ikvmArg>-debug</ikvmArg>
-          </ikvmArgs>
-          <!-- these are additional referenced DLLs (beyond mscorlib, System and System.Core) -->
-          <dlls>
-            <dll>System.Data.dll</dll>
-            <dll>OpenTK.dll</dll>
-            <dll>monotouch.dll</dll>
-            <dll>Mono.Data.Sqlite.dll</dll>
-          </dlls>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>ikvm</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-</project>
-}}}
+        <dependency>
+          <groupId>baz</groupId>
+          <artifactId>bif</artifactId>
+          <version>1.2</version>
+        </dependency>
+      </dependencies>
+
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.samskivert</groupId>
+            <artifactId>ikvm-maven-plugin</artifactId>
+            <version>1.0</version>
+            <!-- this lets Maven know that we define 'packaging: dll' -->
+            <extensions>true</extensions>
+            <configuration>
+              <ikvmHome>${user.dir}/projects/ikvm-monotouch</ikvmHome>
+              <ikvmArgs>
+                <ikvmArg>-debug</ikvmArg>
+              </ikvmArgs>
+              <!-- these are additional referenced DLLs (beyond mscorlib, System and System.Core) -->
+              <dlls>
+                <dll>System.Data.dll</dll>
+                <dll>OpenTK.dll</dll>
+                <dll>monotouch.dll</dll>
+                <dll>Mono.Data.Sqlite.dll</dll>
+              </dlls>
+            </configuration>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>ikvm</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </project>
 
 ## License
 
