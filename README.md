@@ -11,7 +11,22 @@ It defines a `dll` packaging type and generates a `dll` artifact.
 
 ## Usage
 
-Here's a sample POM that demonstrates the use of this plugin:
+One must configure their IKVM installation location in Maven's global settings
+(`~/.m2/settings.xml`). For example:
+
+  <profiles>
+    <profile>
+      <id>ikvm</id>
+      <properties>
+        <ikvm.home>${user.home}/projects/ikvm-monotouch</ikvm.home>
+      </properties>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <activeProfile>ikvm</activeProfile>
+  </activeProfiles>
+
+Once that's done, the following POM fragment demonstrates the use of this plugin:
 
     <?xml version="1.0" encoding="UTF-8"?>
     <project ...>
@@ -44,7 +59,10 @@ Here's a sample POM that demonstrates the use of this plugin:
             <!-- this lets Maven know that we define 'packaging: dll' -->
             <extensions>true</extensions>
             <configuration>
-              <ikvmHome>${user.home}/projects/ikvm-monotouch</ikvmHome>
+              <!-- monoPath specifies where to find the Mono standard libraries. It defaults to:
+                   /Developer/MonoTouch/usr/lib/mono/2.1
+                   but you can customize it to use any other Mono installation. -->
+              <!-- <monoPath>/path/to/mono/usr/lib/x.x</monoPath> -->
               <ikvmArgs>
                 <ikvmArg>-debug</ikvmArg>
               </ikvmArgs>
@@ -68,6 +86,8 @@ Here's a sample POM that demonstrates the use of this plugin:
         </plugins>
       </build>
     </project>
+
+Note that the plugin expects `mono` to be in your path on the command line.
 
 ## License
 
