@@ -118,7 +118,7 @@ public class IkvmMavenMojo extends AbstractMojo
         for (String arg : ikvmArgs) {
             if (stdArgs.contains(arg)) continue;
             if (arg.startsWith("-out:")) {
-                getLog().warn("Don't specify -out:file directly. Set project.build.outputDirectory " +
+                getLog().warn("Don't specify -out:file directly. Set project.build.directory " +
                               "and project.build.finalName in your POM.");
                 continue;
             }
