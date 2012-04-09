@@ -14,17 +14,17 @@ It defines a `dll` packaging type and generates a `dll` artifact.
 One must configure their IKVM installation location in Maven's global settings
 (`~/.m2/settings.xml`). For example:
 
-  <profiles>
-    <profile>
-      <id>ikvm</id>
-      <properties>
-        <ikvm.home>${user.home}/projects/ikvm-monotouch</ikvm.home>
-      </properties>
-    </profile>
-  </profiles>
-  <activeProfiles>
-    <activeProfile>ikvm</activeProfile>
-  </activeProfiles>
+    <profiles>
+      <profile>
+        <id>ikvm</id>
+        <properties>
+          <ikvm.home>${user.home}/projects/ikvm-monotouch</ikvm.home>
+        </properties>
+      </profile>
+    </profiles>
+    <activeProfiles>
+      <activeProfile>ikvm</activeProfile>
+    </activeProfiles>
 
 Once that's done, the following POM fragment demonstrates the use of this plugin:
 
