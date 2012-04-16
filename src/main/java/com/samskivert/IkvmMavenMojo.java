@@ -5,6 +5,7 @@
 package com.samskivert;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -51,10 +52,20 @@ public class IkvmMavenMojo extends AbstractMojo
 
     /**
      * Additional DLLs (beyond mscorlib, System and System.Core) to reference. These can be
-     * absoulte paths, or relative to {@ocde monoPath}.
+     * absoulte paths, or relative to {@code monoPath}.
      * @parameter
      */
     public List<String> dlls;
+
+    /**
+     * Creates a zero-sized stub file in the event that {@code ikvm.path} is not set and we cannot
+     * build a proper artifact. This allows builds that include an ios submodule to not fail even
+     * when built in environments that cannot build the ios component. One can also solve this
+     * problem with Maven profiles but it is extremely messy and foists a lot of complexity onto
+     * the end user.
+     * @parameter expression="${ikvm.createstub}" default-value="false"
+     */
+    public boolean createStub;
 
     /**
      * The local repository to use when resolving dependencies.
@@ -63,8 +74,30 @@ public class IkvmMavenMojo extends AbstractMojo
     public ArtifactRepository localRepository;
 
     public void execute () throws MojoExecutionException {
+        // create our target directory if needed (normally the jar plugin does this, but we don't
+        // run the jar plugin)
+        File projectDir = new File(_project.getBuild().getDirectory());
+        if (!projectDir.isDirectory()) {
+            projectDir.mkdir();
+        }
+
+        // configure our artifact file
+        File artifactFile = new File(projectDir, _project.getBuild().getFinalName() + ".dll");
+        _project.getArtifact().setFile(artifactFile);
+
         if (ikvmPath == null) {
-            getLog().warn("ikvm.path is not set. Skipping IKVM build.");
+            // if requested, create a zero size artifact file
+            if (createStub) {
+                getLog().info("ikvm.path is not set. Creating stub IKVM artifact.");
+                try {
+                    artifactFile.createNewFile();
+                } catch (IOException ioe) {
+                    throw new MojoExecutionException(
+                        "Unable to create stub artifact file: " + artifactFile, ioe);
+                }
+            } else {
+                getLog().warn("ikvm.path is not set. Skipping IKVM build.");
+            }
             return;
         }
 
@@ -101,17 +134,6 @@ public class IkvmMavenMojo extends AbstractMojo
             throw new MojoExecutionException("Failed to resolve dependencies.", e);
         }
 
-        // create our target directory if needed (normally the jar plugin does this, but we don't
-        // run the jar plugin)
-        File projectDir = new File(_project.getBuild().getDirectory());
-        if (!projectDir.isDirectory()) {
-            projectDir.mkdir();
-        }
-
-        // configure our artifact file
-        File artifact = new File(projectDir, _project.getBuild().getFinalName() + ".dll");
-        _project.getArtifact().setFile(artifact);
-
         // create a command that executes mono on ikvmc.exe
         Commandline cli = new Commandline("mono");
         File ikvmcExe = new File(new File(ikvmPath, "bin"), "ikvmc.exe");
@@ -137,7 +159,7 @@ public class IkvmMavenMojo extends AbstractMojo
         }
 
         // add our output file
-        cli.createArgument().setValue("-out:" + artifact.getAbsolutePath());
+        cli.createArgument().setValue("-out:" + artifactFile.getAbsolutePath());
 
         // set the MONO_PATH envvar
         cli.addEnvironment("MONO_PATH", monoPath.getAbsolutePath());
