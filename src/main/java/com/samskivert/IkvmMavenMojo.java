@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
@@ -18,7 +17,6 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
 import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactResolutionResult;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -27,6 +25,7 @@ import org.apache.maven.project.MavenProject;
 /**
  * Goal which generates an IKVM dll containing all the jars on the classpath.
  *
+ * @requiresDependencyResolution compile
  * @goal ikvm
  * @phase package
  */
@@ -117,17 +116,21 @@ public class IkvmMavenMojo extends AbstractMojo
         }
 
         // resolve the (non-test) jar dependencies, all of which we'll include in our DLL
-        List<File> depends = new ArrayList<File>();
+        List<File> javaDepends = new ArrayList<File>();
+        List<File> dllDepends = new ArrayList<File>();
         try {
-            Set artifacts = _project.createArtifacts(_factory, null, null);
-            // ArtifactFilter filter = ...
-            ArtifactResolutionResult arr = _resolver.resolveTransitively(
-                artifacts, _project.getArtifact(), _project.getManagedVersionMap(), localRepository,
-                _project.getRemoteArtifactRepositories(), _metadataSource);
-            for (Object art : arr.getArtifacts()) {
-                Artifact artifact = (Artifact)art;
-                if (!artifact.getScope().equals(Artifact.SCOPE_TEST)) {
-                    depends.add(artifact.getFile());
+            for (Object a : _project.getArtifacts()) {
+                Artifact artifact = (Artifact)a;
+                getLog().debug("Considering artifact [" + artifact.getGroupId() + ":" +
+                    artifact.getArtifactId() + "]");
+                // I think @requiresDependencyResolution compile prevents this, but let's be sure.
+                if (artifact.getScope().equals(Artifact.SCOPE_TEST)) {
+                    continue;
+                }
+                if ("dll".equals(artifact.getType())) {
+                    dllDepends.add(artifact.getFile());
+                } else {
+                    javaDepends.add(artifact.getFile());
                 }
             }
         } catch (Exception e) {
@@ -182,9 +185,12 @@ public class IkvmMavenMojo extends AbstractMojo
                 cli.createArgument().setValue("-r:" + new File(monoPath, dll).getAbsolutePath());
             }
         }
+        for (File dll : dllDepends) {
+            cli.createArgument().setValue("-r:" + dll.getAbsolutePath());
+        }
 
         // add our jar files
-        for (File depend : depends) {
+        for (File depend : javaDepends) {
             cli.createArgument().setValue(depend.getAbsolutePath());
         }
 

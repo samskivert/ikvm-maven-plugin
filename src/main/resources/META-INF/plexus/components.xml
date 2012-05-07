@@ -33,6 +33,7 @@
         <extension>dll</extension>
         <type>dll</type>
         <packaging>dll</packaging>
+        <addedToClasspath>true</addedToClasspath>
       </configuration>
     </component>
   </components>
