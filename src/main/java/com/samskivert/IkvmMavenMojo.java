@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.cli.Commandline;
@@ -55,6 +56,13 @@ public class IkvmMavenMojo extends AbstractMojo
      * @parameter
      */
     public List<String> dlls;
+
+    /**
+     * DLLs to copy into the target directory. These can be absoulte paths, or relative to {@code
+     * ikvmPath}.
+     * @parameter
+     */
+    public List<String> copyDlls;
 
     /**
      * Creates a zero-sized stub file in the event that {@code ikvm.path} is not set and we cannot
@@ -192,6 +200,20 @@ public class IkvmMavenMojo extends AbstractMojo
         // add our jar files
         for (File depend : javaDepends) {
             cli.createArgument().setValue(depend.getAbsolutePath());
+        }
+
+        // copy any to-be-copied dlls
+        for (String dll : copyDlls) {
+            File dfile = new File(dll);
+            if (!dfile.exists()) dfile = new File(ikvmPath, dll);
+            if (!dfile.exists()) throw new MojoExecutionException(
+                dll + " does not exist (nor does " + dfile.getPath() + ")");
+            try {
+                FileUtils.copyFile(dfile, new File(projectDir, dfile.getName()));
+            } catch (IOException ioe) {
+                throw new MojoExecutionException(
+                    "Failed to copy " + dfile + " into " + projectDir, ioe);
+            }
         }
 
         // log our full command for great debuggery
