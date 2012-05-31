@@ -6,9 +6,12 @@ package com.samskivert;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
+import org.codehaus.plexus.util.Expand;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
@@ -73,6 +76,14 @@ public class IkvmMavenMojo extends AbstractMojo
      * @parameter expression="${ikvm.createstub}" default-value="false"
      */
     public boolean createStub;
+
+    /**
+     * If true, only includes class files from the dependent jar files, ignoring any XML, image or
+     * other files that might also be in the jar. If this is false (the default) all of those
+     * resources files are included in the generated DLL.
+     * @parameter expression="${ikvm.onlycode}" default-value="false"
+     */
+    public boolean onlyCode;
 
     /**
      * The local repository to use when resolving dependencies.
@@ -197,9 +208,36 @@ public class IkvmMavenMojo extends AbstractMojo
             cli.createArgument().setValue("-r:" + dll.getAbsolutePath());
         }
 
-        // add our jar files
-        for (File depend : javaDepends) {
-            cli.createArgument().setValue(depend.getAbsolutePath());
+        // if we're in onlyCode mode, then unpack our jars into a temporary directory and delete
+        // all non-class files
+        if (onlyCode) {
+            File codeDir = new File(projectDir, "dll-classes");
+            codeDir.mkdir();
+            for (File depend : javaDepends) {
+                try {
+                    Expand ex = new Expand() {
+                        @Override protected void extractFile (
+                              File srcF, File dir, InputStream in, String entryName,
+                              Date entryDate, boolean isDir) throws Exception {
+                            if (entryName.endsWith(".class")) {
+                                super.extractFile(srcF, dir, in, entryName, entryDate, isDir);
+                            }
+                        }
+                    };
+                    ex.setSrc(depend);
+                    ex.setDest(codeDir);
+                    ex.execute();
+                } catch (Exception e) {
+                    throw new MojoExecutionException("Error extracting classes from: " + depend, e);
+                }
+            }
+            cli.createArgument().setValue("-recurse:" + codeDir.getAbsolutePath() + "/*.class");
+
+        } else {
+            // otherwise just add our jar files to the argument list
+            for (File depend : javaDepends) {
+                cli.createArgument().setValue(depend.getAbsolutePath());
+            }
         }
 
         // copy any to-be-copied dlls
