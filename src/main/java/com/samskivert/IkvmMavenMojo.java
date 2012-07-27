@@ -68,6 +68,14 @@ public class IkvmMavenMojo extends AbstractMojo
     public List<String> copyDlls;
 
     /**
+     * Causes the plugin to copy {@code <type>dll</type>} dependencies into the target directory
+     * (minus their version information) so that they can be consistently referenced from your
+     * {@code .csproj} file.
+     * @parameter expression="${ikvm.copydlldepends}" default-value="false"
+     */
+    public boolean copyDllDepends;
+
+    /**
      * Creates a zero-sized stub file in the event that {@code ikvm.path} is not set and we cannot
      * build a proper artifact. This allows builds that include an ios submodule to not fail even
      * when built in environments that cannot build the ios component. One can also solve this
@@ -136,7 +144,7 @@ public class IkvmMavenMojo extends AbstractMojo
 
         // resolve the (non-test) jar dependencies, all of which we'll include in our DLL
         List<File> javaDepends = new ArrayList<File>();
-        List<File> dllDepends = new ArrayList<File>();
+        List<Artifact> dllDepends = new ArrayList<Artifact>();
         try {
             for (Object a : _project.getArtifacts()) {
                 Artifact artifact = (Artifact)a;
@@ -147,7 +155,7 @@ public class IkvmMavenMojo extends AbstractMojo
                     continue;
                 }
                 if ("dll".equals(artifact.getType())) {
-                    dllDepends.add(artifact.getFile());
+                    dllDepends.add(artifact);
                 } else {
                     javaDepends.add(artifact.getFile());
                 }
@@ -204,8 +212,8 @@ public class IkvmMavenMojo extends AbstractMojo
                 cli.createArgument().setValue("-r:" + new File(monoPath, dll).getAbsolutePath());
             }
         }
-        for (File dll : dllDepends) {
-            cli.createArgument().setValue("-r:" + dll.getAbsolutePath());
+        for (Artifact dll : dllDepends) {
+            cli.createArgument().setValue("-r:" + dll.getFile().getAbsolutePath());
         }
 
         // if we're in onlyCode mode, then unpack our jars into a temporary directory and delete
@@ -251,6 +259,19 @@ public class IkvmMavenMojo extends AbstractMojo
             } catch (IOException ioe) {
                 throw new MojoExecutionException(
                     "Failed to copy " + dfile + " into " + projectDir, ioe);
+            }
+        }
+
+        // if we want our dll depends copied, do that as well
+        if (copyDllDepends) {
+            for (Artifact dll : dllDepends) {
+                try {
+                    String name = dll.getArtifactId() + "." + dll.getType();
+                    FileUtils.copyFile(dll.getFile(), new File(projectDir, name));
+                } catch (IOException ioe) {
+                    throw new MojoExecutionException(
+                        "Failed to copy " + dll + " into " + projectDir, ioe);
+                }
             }
         }
 
