@@ -191,9 +191,6 @@ public class IkvmMavenMojo extends AbstractMojo
         // add our output file
         cli.createArgument().setValue("-out:" + artifactFile.getAbsolutePath());
 
-        // set the MONO_PATH envvar
-        cli.addEnvironment("MONO_PATH", monoPath.getAbsolutePath());
-
         // add our standard DLLs
         List<String> stdDlls = new ArrayList<String>();
         stdDlls.add("mscorlib.dll");
