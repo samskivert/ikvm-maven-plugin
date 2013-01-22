@@ -9,10 +9,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.codehaus.plexus.util.Expand;
 import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.cli.Commandline;
@@ -92,6 +95,12 @@ public class IkvmMavenMojo extends AbstractMojo
      * @parameter expression="${ikvm.onlycode}" default-value="false"
      */
     public boolean onlyCode;
+
+    /**
+     * If true, check the output of ikvmc for "Warning" statements and abort the build.
+     * @parameter expression="${ikvm.treatWarningsAsErrors}" default-value="false"
+     */
+    public boolean treatWarningsAsErrors;
 
     /**
      * The local repository to use when resolving dependencies.
@@ -290,9 +299,30 @@ public class IkvmMavenMojo extends AbstractMojo
                 throw new MojoExecutionException("ikvmc.exe failed; see above output.");
             }
 
+            checkForWarnings(stdout);
+            checkForWarnings(stderr);
+
         } catch (CommandLineException clie) {
             throw new MojoExecutionException("Executing ikvmc.exe failed", clie);
         }
+    }
+
+    private void checkForWarnings (String output)
+        throws MojoExecutionException
+    {
+        if (!treatWarningsAsErrors || output == null || output.length() == 0) return;
+        Set<String> warnings = new HashSet<String>();
+        String search = "Warning ";
+        int searchLen = search.length(), count = 0;
+        for (int line = 0; line != -1; line = output.indexOf('\n', line + 1)) {
+            if (output.regionMatches(line + 1, search, 0, searchLen)) {
+                warnings.add(output.substring(line + 1 + searchLen, output.indexOf(':', line)));
+                count++;
+            }
+        }
+        if (count == 0) return;
+        throw new MojoExecutionException(count + " warning" + (count > 1 ? "s" : "") +
+            " detected in ikvmc output: " + StringUtils.join(warnings.iterator(), ", ") + ".");
     }
 
     /** @parameter default-value="${project}" */
