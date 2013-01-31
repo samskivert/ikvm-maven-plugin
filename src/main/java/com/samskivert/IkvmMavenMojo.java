@@ -216,17 +216,13 @@ public class IkvmMavenMojo extends AbstractMojo
         stdDlls.add("System.dll");
         stdDlls.add("System.Core.dll");
         for (String dll : stdDlls) {
-            cli.createArgument().setValue("-r:" + new File(dllPath, dll).getAbsolutePath());
+            cli.createArgument().setValue("-r:" + getDLLPath(dll));
         }
 
         // add our DLLs
         for (String dll : dlls) {
             if (stdDlls.contains(dll)) continue;
-            if (new File(dll).isAbsolute()) {
-                cli.createArgument().setValue("-r:" + dll);
-            } else {
-                cli.createArgument().setValue("-r:" + new File(dllPath, dll).getAbsolutePath());
-            }
+            cli.createArgument().setValue("-r:" + getDLLPath(dll));
         }
         for (Artifact dll : dllDepends) {
             cli.createArgument().setValue("-r:" + dll.getFile().getAbsolutePath());
@@ -316,6 +312,15 @@ public class IkvmMavenMojo extends AbstractMojo
         } catch (CommandLineException clie) {
             throw new MojoExecutionException("Executing ikvmc.exe failed", clie);
         }
+    }
+
+    private String getDLLPath (String dll) {
+        // if the supplied DLL path is already absolute, just return it
+        if (new File(dll).isAbsolute()) return dll;
+        // if dllPath was set to a valid directory, use that
+        if (dllPath.isDirectory()) return new File(dllPath, dll).getAbsolutePath();
+        // otherwise just use the relative path and hope that things work
+        return dll;
     }
 
     private void checkForWarnings (String output)
