@@ -45,10 +45,18 @@ public class IkvmMavenMojo extends AbstractMojo
     public File ikvmPath;
 
     /**
-     * The location of the Mono standard library DLLs.
-     * @parameter expression="${mono.path}" default-value="/Developer/MonoTouch/usr/lib/mono/2.1"
+     * The location of the standard library DLLs.
+     * @parameter expression="${dll.path}" default-value="/Developer/MonoTouch/usr/lib/mono/2.1"
      */
-    public File monoPath;
+    public File dllPath;
+
+    /**
+     * Indicates that IKVM should be run via Mono rather than run directly as an executable. The
+     * plugin defaults to running IKVM directly if we are running on Windows and using Mono
+     * otherwise (on Mac and Linux), but this can force the use of Mono on Windows.
+     * @parameter expression="${force.mono}" default-value="false"
+     */
+    public boolean forceMono;
 
     /**
      * Additional arguments to pass to IKVM.
@@ -58,7 +66,7 @@ public class IkvmMavenMojo extends AbstractMojo
 
     /**
      * Additional DLLs (beyond mscorlib, System and System.Core) to reference. These can be
-     * absoulte paths, or relative to {@code monoPath}.
+     * absolute paths, or relative to {@code dllPath}.
      * @parameter
      */
     public List<String> dlls;
@@ -137,13 +145,9 @@ public class IkvmMavenMojo extends AbstractMojo
         }
 
         // sanity checks
-        if (!monoPath.isDirectory()) {
-            throw new MojoExecutionException(
-                "mono.path refers to non- or non-existent directory: " + monoPath);
-        }
         if (!ikvmPath.isDirectory()) {
             throw new MojoExecutionException(
-                "ikvm.path refers to non- or non-existent directory: " + monoPath);
+                "ikvm.path refers to non- or non-existent directory: " + ikvmPath);
         }
 
         File ikvmc = new File(new File(ikvmPath, "bin"), "ikvmc.exe");
@@ -173,10 +177,16 @@ public class IkvmMavenMojo extends AbstractMojo
             throw new MojoExecutionException("Failed to resolve dependencies.", e);
         }
 
-        // create a command that executes mono on ikvmc.exe
-        Commandline cli = new Commandline("mono");
+        // create the command line that executes ikvmc.exe
         File ikvmcExe = new File(new File(ikvmPath, "bin"), "ikvmc.exe");
-        cli.createArgument().setValue(ikvmcExe.getAbsolutePath());
+        Commandline cli;
+        // determine whether to run ikvmc.exe directly or to run via mono
+        if (!forceMono && System.getProperty("os.name").contains("Windows")) {
+            cli = new Commandline(ikvmcExe.getAbsolutePath());
+        } else {
+            cli = new Commandline("mono");
+            cli.createArgument().setValue(ikvmcExe.getAbsolutePath());
+        }
 
         // add our standard args
         List<String> stdArgs = new ArrayList<String>();
@@ -206,7 +216,7 @@ public class IkvmMavenMojo extends AbstractMojo
         stdDlls.add("System.dll");
         stdDlls.add("System.Core.dll");
         for (String dll : stdDlls) {
-            cli.createArgument().setValue("-r:" + new File(monoPath, dll).getAbsolutePath());
+            cli.createArgument().setValue("-r:" + new File(dllPath, dll).getAbsolutePath());
         }
 
         // add our DLLs
@@ -215,7 +225,7 @@ public class IkvmMavenMojo extends AbstractMojo
             if (new File(dll).isAbsolute()) {
                 cli.createArgument().setValue("-r:" + dll);
             } else {
-                cli.createArgument().setValue("-r:" + new File(monoPath, dll).getAbsolutePath());
+                cli.createArgument().setValue("-r:" + new File(dllPath, dll).getAbsolutePath());
             }
         }
         for (Artifact dll : dllDepends) {
@@ -245,7 +255,8 @@ public class IkvmMavenMojo extends AbstractMojo
                     throw new MojoExecutionException("Error extracting classes from: " + depend, e);
                 }
             }
-            cli.createArgument().setValue("-recurse:" + codeDir.getAbsolutePath() + "/*.class");
+            cli.createArgument().setValue("-recurse:" + codeDir.getAbsolutePath() + File.separator +
+                                          "*.class");
 
         } else {
             // otherwise just add our jar files to the argument list
