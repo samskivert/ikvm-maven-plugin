@@ -62,21 +62,21 @@ public class IkvmMavenMojo extends AbstractMojo
      * Additional arguments to pass to IKVM.
      * @parameter
      */
-    public List<String> ikvmArgs;
+    public List<String> ikvmArgs = new ArrayList<String>();
 
     /**
      * Additional DLLs (beyond mscorlib, System and System.Core) to reference. These can be
      * absolute paths, or relative to {@code dllPath}.
      * @parameter
      */
-    public List<String> dlls;
+    public List<String> dlls = new ArrayList<String>();
 
     /**
      * DLLs to copy into the target directory. These can be absoulte paths, or relative to {@code
      * ikvmPath}.
      * @parameter
      */
-    public List<String> copyDlls;
+    public List<String> copyDlls = new ArrayList<String>();
 
     /**
      * Causes the plugin to copy {@code <type>dll</type>} dependencies into the target directory
