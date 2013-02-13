@@ -92,7 +92,10 @@ Once that's done, the following POM fragment demonstrates the use of this plugin
       </build>
     </project>
 
-Note that the plugin expects `mono` to be in your path on the command line.
+On Windows, the plugin will execute `ikvmc.exe` directly. On non-Windows
+platforms, the plugin expects `mono` to be in your path on the command line.
+You can force the use of Mono even on Windows by adding
+`<force.mono>true</force.mono>` in `<configuration>`.
 
 ## License
 
