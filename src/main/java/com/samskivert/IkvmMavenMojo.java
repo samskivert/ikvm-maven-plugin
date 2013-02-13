@@ -45,6 +45,12 @@ public class IkvmMavenMojo extends AbstractMojo
     public File ikvmPath;
 
     /**
+     * Location of the {@code ikvmc.exe} executable. Default: {@code ${ikvm.path}/bin/ikvmc.exe}.
+     * @parameter expression="${ikvmc.path}"
+     */
+    public File ikvmcPath;
+
+    /**
      * The location of the standard library DLLs.
      * @parameter expression="${dll.path}" default-value="/Developer/MonoTouch/usr/lib/mono/2.1"
      */
@@ -150,9 +156,9 @@ public class IkvmMavenMojo extends AbstractMojo
                 "ikvm.path refers to non- or non-existent directory: " + ikvmPath);
         }
 
-        File ikvmc = new File(new File(ikvmPath, "bin"), "ikvmc.exe");
-        if (!ikvmc.exists()) {
-            throw new MojoExecutionException("Unable to find ikmvc at: " + ikvmc);
+        if (ikvmcPath == null) ikvmcPath = new File(new File(ikvmPath, "bin"), "ikvmc.exe");
+        if (!ikvmcPath.exists()) {
+            throw new MojoExecutionException("Unable to find ikmvc at: " + ikvmcPath);
         }
 
         // resolve the (non-test) jar dependencies, all of which we'll include in our DLL
@@ -178,14 +184,13 @@ public class IkvmMavenMojo extends AbstractMojo
         }
 
         // create the command line that executes ikvmc.exe
-        File ikvmcExe = new File(new File(ikvmPath, "bin"), "ikvmc.exe");
         Commandline cli;
         // determine whether to run ikvmc.exe directly or to run via mono
         if (!forceMono && System.getProperty("os.name").contains("Windows")) {
-            cli = new Commandline(ikvmcExe.getAbsolutePath());
+            cli = new Commandline(ikvmcPath.getAbsolutePath());
         } else {
             cli = new Commandline("mono");
-            cli.createArgument().setValue(ikvmcExe.getAbsolutePath());
+            cli.createArgument().setValue(ikvmcPath.getAbsolutePath());
         }
 
         // add our standard args

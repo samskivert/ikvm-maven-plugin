@@ -19,10 +19,13 @@ One must configure their IKVM installation location in Maven's global settings
         <id>ikvm</id>
         <properties>
           <ikvm.path>${user.home}/projects/ikvm-monotouch</ikvm.path>
+          <!-- ikvmc.path specifies where to find ikvmc.exe. It defaults to:
+               ${ikvm.path}/bin/ikvmc.exe -->
+          <!-- <ikvmc.path>/path/to/ikvmc.exe</ikvmc.path> -->
           <!-- mono.path specifies where to find the Mono standard libraries. It defaults to:
                /Developer/MonoTouch/usr/lib/mono/2.1
                but you can customize it to use any other Mono installation. -->
-          <!-- <mono.path/to/mono/usr/lib/x.x</mono.path> -->
+          <!-- <mono.path>/path/to/mono/usr/lib/x.x</mono.path> -->
         </properties>
       </profile>
     </profiles>
