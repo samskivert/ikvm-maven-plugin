@@ -79,14 +79,6 @@ Once that's done, the following POM fragment demonstrates the use of this plugin
                 <dll>Mono.Data.Sqlite.dll</dll>
               </dlls>
             </configuration>
-            <executions>
-              <execution>
-                <phase>package</phase>
-                <goals>
-                  <goal>ikvm</goal>
-                </goals>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>
