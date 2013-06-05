@@ -324,10 +324,10 @@ public class IkvmMavenMojo extends AbstractMojo
         if (!treatWarningsAsErrors || output == null || output.length() == 0) return;
         Set<String> warnings = new HashSet<String>();
         String search = "Warning ";
-        int searchLen = search.length(), count = 0;
-        for (int line = 0; line != -1; line = output.indexOf('\n', line + 1)) {
-            if (output.regionMatches(line + 1, search, 0, searchLen)) {
-                warnings.add(output.substring(line + 1 + searchLen, output.indexOf(':', line)));
+        int searchLen = search.length(), count = 0, line = 0, nextLine = 0;
+        for (; nextLine != -1; nextLine = output.indexOf('\n', line), line = nextLine + 1) {
+            if (output.regionMatches(line, search, 0, searchLen)) {
+                warnings.add(output.substring(line + searchLen, output.indexOf(':', line)));
                 count++;
             }
         }
